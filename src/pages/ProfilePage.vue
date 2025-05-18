@@ -10,19 +10,46 @@
         <div><strong>Emergency Contact Name:</strong> {{ profile.emergency_name || '-' }}</div>
         <div><strong>Emergency Contact Phone:</strong> {{ profile.emergency_phone || '-' }}</div>
         <div><strong>Medical Info:</strong> {{ profile.medical_info || '-' }}</div>
+        <div><strong>Date of Birth / Age:</strong> {{ profile.date_of_birth ? profile.date_of_birth.substr(0,10) : '-' }}</div>
+        <div><strong>Gender:</strong> {{ profile.gender || '-' }}</div>
+        <div><strong>Blood Type:</strong> {{ profile.blood_type || '-' }}</div>
+        <div><strong>Allergies:</strong> {{ profile.allergies || '-' }}</div>
+        <div><strong>Chronic Conditions:</strong> {{ profile.chronic_conditions || '-' }}</div>
+        <div><strong>Current Medications:</strong> {{ profile.current_medications || '-' }}</div>
+        <div><strong>Past Surgeries:</strong> {{ profile.past_surgeries || '-' }}</div>
+        <div><strong>Primary Care Physician:</strong> {{ profile.primary_physician || '-' }}</div>
+        <div><strong>Physician Contact:</strong> {{ profile.physician_contact || '-' }}</div>
+        <div><strong>Preferred Pharmacy:</strong> {{ profile.preferred_pharmacy || '-' }}</div>
+        <div><strong>Insurance Provider:</strong> {{ profile.insurance_provider || '-' }}</div>
+        <div><strong>Insurance Policy #:</strong> {{ profile.insurance_policy || '-' }}</div>
+        <div><strong>Vaccination Records:</strong> {{ profile.vaccination_records || '-' }}</div>
+
       </div>
       <button @click="editMode = true">Edit Profile</button>
   
       <div v-if="editMode" class="edit-form">
         <h3>Edit Profile</h3>
         <form @submit.prevent="updateProfile">
-          <label>First Name: <input v-model="edit.first_name" /></label><br>
-          <label>Last Name: <input v-model="edit.last_name" /></label><br>
-          <label>Address: <input v-model="edit.address" /></label><br>
-          <label>Phone: <input v-model="edit.phone" /></label><br>
-          <label>Emergency Name: <input v-model="edit.emergency_name" /></label><br>
-          <label>Emergency Phone: <input v-model="edit.emergency_phone" /></label><br>
-          <label>Medical Info: <textarea v-model="edit.medical_info"></textarea></label><br>
+            <label>First Name: <input v-model="edit.first_name" /></label><br>
+            <label>Last Name: <input v-model="edit.last_name" /></label><br>
+            <label>Address: <input v-model="edit.address" /></label><br>
+            <label>Phone: <input v-model="edit.phone" /></label><br>
+            <label>Emergency Name: <input v-model="edit.emergency_name" /></label><br>
+            <label>Emergency Phone: <input v-model="edit.emergency_phone" /></label><br>
+            <label>Medical Info: <textarea v-model="edit.medical_info"></textarea></label><br>
+            <label>Date of Birth: <input v-model="edit.date_of_birth" type="date" /></label><br>
+            <label>Gender: <input v-model="edit.gender" /></label><br>
+            <label>Blood Type: <input v-model="edit.blood_type" /></label><br>
+            <label>Allergies: <textarea v-model="edit.allergies"></textarea></label><br>
+            <label>Chronic Conditions: <textarea v-model="edit.chronic_conditions"></textarea></label><br>
+            <label>Current Medications: <textarea v-model="edit.current_medications"></textarea></label><br>
+            <label>Past Surgeries: <textarea v-model="edit.past_surgeries"></textarea></label><br>
+            <label>Primary Care Physician: <input v-model="edit.primary_physician" /></label><br>
+            <label>Physician Contact: <input v-model="edit.physician_contact" /></label><br>
+            <label>Preferred Pharmacy: <input v-model="edit.preferred_pharmacy" /></label><br>
+            <label>Insurance Provider: <input v-model="edit.insurance_provider" /></label><br>
+            <label>Insurance Policy #: <input v-model="edit.insurance_policy" /></label><br>
+            <label>Vaccination Records: <textarea v-model="edit.vaccination_records"></textarea></label><br>
           <button type="submit">Save</button>
           <button type="button" @click="editMode = false">Cancel</button>
         </form>

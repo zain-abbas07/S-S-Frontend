@@ -65,7 +65,20 @@
           // Store in localStorage
           localStorage.setItem("token", token);
           localStorage.setItem("userId", userId);
-  
+          
+            // Fetch patientId for this user (if patient)
+            try {
+            const res = await axios.get(`/api/patients`, {
+                params: { user_id: userId },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // If this user is a patient, store their patientId
+            if (Array.isArray(res.data) && res.data.length > 0) {
+                localStorage.setItem("patientId", res.data[0].id);
+            }
+            } catch (e) {
+            // It's ok if not a patient, just skip
+            }
           // Redirect to profile or home
           this.$router.push("/profile");
         } catch (err) {

@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage.vue';
 import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
+import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
 Vue.use(Router);
 
 export default new Router({
@@ -30,7 +31,9 @@ export default new Router({
       component: SignupPage
     },
     { path: '/calendar', name: 'Calendar', component: CalendarPage },
-    { path: '/map', name: 'Map', component: MapPage }
+    { path: '/map', name: 'Map', component: MapPage },
+    
+{ path: '/medical-records', name: 'MedicalRecords', component: MedicalRecordsPage }
 
   ]
 });

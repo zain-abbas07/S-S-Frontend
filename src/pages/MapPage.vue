@@ -67,7 +67,9 @@
           const script = document.createElement("script");
 // Use this in your MapPage.vue
 script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.VUE_APP_GOOGLE_MAPS_API_KEY}`;          script.defer = true;
-          script.onload = this.renderMap;
+script.defer = true;
+          
+script.onload = this.renderMap;
           document.head.appendChild(script);
         } else {
           this.renderMap();

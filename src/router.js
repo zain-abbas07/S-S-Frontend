@@ -6,34 +6,58 @@ import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
+import HomePage from './pages/HomePage.vue';
+
 Vue.use(Router);
 
 export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/profile',
-      name: 'Profile',
-      component: ProfilePage
-    },
-    {
-      path: '*',
-      redirect: '/profile'
+      path: '/',
+      name: 'Home',
+      component: HomePage,
+      meta: { requiresAuth: false }
     },
     {
       path: '/login',
       name: 'Login',
-      component: LoginPage
+      component: LoginPage,
+      meta: { requiresAuth: false }
     },
     {
       path: '/signup',
       name: 'Signup',
-      component: SignupPage
+      component: SignupPage,
+      meta: { requiresAuth: false }
     },
-    { path: '/calendar', name: 'Calendar', component: CalendarPage },
-    { path: '/map', name: 'Map', component: MapPage },
-    
-{ path: '/medical-records', name: 'MedicalRecords', component: MedicalRecordsPage }
-
+    {
+      path: '/profile',
+      name: 'Profile',
+      component: ProfilePage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/calendar',
+      name: 'Calendar',
+      component: CalendarPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/map',
+      name: 'Map',
+      component: MapPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/medical-records',
+      name: 'MedicalRecords',
+      component: MedicalRecordsPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '*',
+      redirect: '/'
+    }
   ]
 });

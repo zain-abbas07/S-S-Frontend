@@ -115,21 +115,29 @@ adding: false,
       return new Date(dt).toLocaleString();
     },
     async fetchEvents() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const userId = localStorage.getItem("userId");
-        const token = localStorage.getItem("token");
-        const res = await axios.get(`/api/events/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        this.events = res.data;
-      } catch (err) {
-        this.error = err.response?.data?.error || "Failed to load events";
-      } finally {
-        this.loading = false;
-      }
-    },
+  this.loading = true;
+  this.error = null;
+
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
+
+  if (!userId || !token) {
+    this.error = "User not authenticated.";
+    this.loading = false;
+    return;
+  }
+
+  try {
+    const res = await axios.get(`/api/events/user/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    this.events = res.data;
+  } catch (err) {
+    this.error = err.response?.data?.error || "Failed to load events";
+  } finally {
+    this.loading = false;
+  }
+},
     async addEvent() {
   this.adding = true;
   this.error = null;

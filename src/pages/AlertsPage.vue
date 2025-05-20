@@ -1,17 +1,14 @@
 <template>
   <div class="alerts-container">
-    <!-- Content -->
     <div class="content">
       <div class="alerts-section">
         <div class="section-header">
-          <h2>Emergency Alerts</h2>
-          <div class="filter-dropdown">
-            <select v-model="filterStatus">
-              <option value="all">All Alerts</option>
-              <option value="unhandled">Active</option>
-              <option value="handled">Handled</option>
-            </select>
-          </div>
+          <h2 class="section-title">🚨 Emergency Alerts</h2>
+          <select v-model="filterStatus" class="filter-dropdown">
+            <option value="all">All Alerts</option>
+            <option value="unhandled">Active</option>
+            <option value="handled">Handled</option>
+          </select>
         </div>
 
         <div v-if="loading" class="loading-state">
@@ -29,80 +26,35 @@
             class="alert-card"
             :class="{ urgent: !alert.handled, resolved: alert.handled }"
           >
-            <div class="alert-icon">
-              <i class="fas fa-exclamation-circle"></i>
+            <div class="alert-header">
+              <h3>{{ alert.handled ? 'Resolved Alert' : '⚠️ Active Alert' }}</h3>
+              <span class="timestamp">{{ formatTime(alert.created_at) }}</span>
             </div>
-            <div class="alert-content">
-              <div class="alert-header">
-                <h3>Emergency Alert</h3>
-                <span class="alert-time">{{ formatTime(new Date(alert.created_at)) }}</span>
-              </div>
-              <p class="alert-description">{{ alert.message }}</p>
-              <div class="patient-info">
-                <span class="patient-name" v-if="alert.users">{{ getUserName(alert.users) }}</span>
-                <span class="device-id">Device: {{ alert.device_id }}</span>
-                <span v-if="alert.lat && alert.lng" class="location">
-                  <a :href="`https://maps.google.com/?q=${alert.lat},${alert.lng}`" target="_blank">View Location</a>
-                </span>
-              </div>
+            <p class="alert-message">{{ alert.message }}</p>
+            <div class="alert-meta">
+              <span>Device: {{ alert.device_id }}</span>
+              <span v-if="alert.users">User: {{ getUserName(alert.users) }}</span>
+              <span v-if="alert.lat && alert.lng">
+                <a :href="`https://maps.google.com/?q=${alert.lat},${alert.lng}`" target="_blank">📍 Location</a>
+              </span>
             </div>
             <div class="alert-actions">
-              <button v-if="!alert.handled" class="resolve-btn" @click="markAsHandled(alert.id)">
-                Mark Handled
+              <button v-if="!alert.handled" class="btn handle" @click="markAsHandled(alert.id)">
+                Mark as Handled
               </button>
-              <button v-if="alert.handled" class="details-btn" @click="showDetails(alert)">
-                Details
-              </button>
-              <button v-if="!alert.handled" class="contact-btn" @click="contactEmergency(alert)">
-                Contact
-              </button>
+              <button class="btn info" @click="showDetails(alert)">Details</button>
+              <button class="btn contact" @click="contactEmergency(alert)">Call User</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="test-emergency-btn">
-        <button @click="triggerTestAlert" :disabled="triggering">
-          {{ triggering ? 'Sending...' : 'Test Emergency Alert' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Modal -->
-    <div v-if="detailsModal.show" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Alert Details</h3>
-          <button class="close-btn" @click="detailsModal.show = false">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="detail-item"><span class="detail-label">Alert ID:</span> <span class="detail-value">{{ detailsModal.alert.id }}</span></div>
-          <div class="detail-item"><span class="detail-label">Message:</span> <span class="detail-value">{{ detailsModal.alert.message }}</span></div>
-          <div class="detail-item" v-if="detailsModal.alert.users">
-            <span class="detail-label">User:</span>
-            <span class="detail-value">{{ getUserName(detailsModal.alert.users) }}</span>
-          </div>
-          <div class="detail-item"><span class="detail-label">Device ID:</span> <span class="detail-value">{{ detailsModal.alert.device_id }}</span></div>
-          <div class="detail-item"><span class="detail-label">Created:</span> <span class="detail-value">{{ formatFullDate(detailsModal.alert.created_at) }}</span></div>
-          <div class="detail-item" v-if="detailsModal.alert.lat && detailsModal.alert.lng">
-            <span class="detail-label">Location:</span>
-            <a :href="`https://maps.google.com/?q=${detailsModal.alert.lat},${detailsModal.alert.lng}`" target="_blank" class="map-link">View on Map</a>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Status:</span>
-            <span class="detail-value status" :class="detailsModal.alert.handled ? 'handled' : 'active'">{{ detailsModal.alert.handled ? 'Handled' : 'Active' }}</span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-primary" @click="detailsModal.show = false">Close</button>
-          <button v-if="!detailsModal.alert.handled" class="btn-action" @click="markAsHandled(detailsModal.alert.id, true)">
-            Mark as Handled
+        <div class="test-emergency-btn">
+          <button @click="triggerTestAlert" :disabled="triggering" class="btn trigger">
+            {{ triggering ? 'Sending...' : 'Test Emergency Alert' }}
           </button>
         </div>
       </div>
     </div>
-
-    <div class="tab-navigator"><div class="indicator"></div></div>
   </div>
 </template>
 
@@ -117,27 +69,24 @@ export default {
       alerts: [],
       loading: true,
       triggering: false,
-      detailsModal: {
-        show: false,
-        alert: {}
-      },
-      currentUser: {
-        id: 1,
-        device_id: 1
-      }
+      currentUser: JSON.parse(localStorage.getItem('profile')) || { id: null, device_id: null, email: null }
     };
   },
-  created() {
-    this.fetchAlerts();
+    created() {
+    if (this.currentUser?.id) {
+        this.registerDeviceForUser(); // 🔁 Assign device on load
+        this.fetchAlerts();
+    } else {
+        this.loading = false;
+    }
+
   },
   computed: {
     filteredAlerts() {
-      let alerts = this.filterStatus === 'all'
+      const filtered = this.filterStatus === 'all'
         ? this.alerts
-        : this.alerts.filter(alert =>
-            this.filterStatus === 'handled' ? alert.handled : !alert.handled
-          );
-      return alerts.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        : this.alerts.filter(alert => this.filterStatus === 'handled' ? alert.handled : !alert.handled);
+      return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
   },
   methods: {
@@ -146,11 +95,13 @@ export default {
       try {
         const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
         const response = await axios.get(`${baseUrl}/alerts`, {
+          //params: { userId: this.currentUser.id },
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
         this.alerts = response.data || [];
+        console.log('Fetched alerts:', this.alerts);
       } catch (error) {
         console.error('Error fetching alerts:', error);
       } finally {
@@ -162,44 +113,58 @@ export default {
       try {
         const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
         const response = await axios.post(`${baseUrl}/alerts`, {
-          message: 'Test emergency alert triggered from the web interface',
-          device_id: this.currentUser.device_id,
-          user_id: this.currentUser.id
+          message: '🚨 Test emergency alert from frontend',
+          device_id: this.currentUser.device_id
         }, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        if (response.data && response.data.alert) {
+        if (response.data?.alert) {
           this.alerts.unshift(response.data.alert);
-          alert('Test alert triggered!');
+          this.showNotification('✅ Test alert sent successfully');
         }
       } catch (error) {
         console.error('Failed to trigger test alert:', error);
-        alert('Failed to trigger test alert.');
+        this.showNotification('❌ Failed to trigger test alert', true);
       } finally {
         this.triggering = false;
       }
     },
-    markAsHandled(alertId, closeModal = false) {
-      const alert = this.alerts.find(a => a.id === alertId);
-      if (alert) alert.handled = true;
-      if (closeModal) this.detailsModal.show = false;
+    async markAsHandled(alertId) {
+      try {
+        const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+        const response = await axios.put(`${baseUrl}/alerts/${alertId}`, {}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        const updatedAlert = response.data;
+        const index = this.alerts.findIndex(a => a.id === alertId);
+        if (index !== -1) {
+          this.alerts.splice(index, 1, updatedAlert);
+        }
+
+        this.showNotification('✅ Alert marked as handled');
+      } catch (error) {
+        console.error('Failed to update alert:', error);
+        this.showNotification('❌ Failed to update alert', true);
+      }
     },
     showDetails(alert) {
-      this.detailsModal.alert = alert;
-      this.detailsModal.show = true;
+      alert(`Details:\n\nMessage: ${alert.message}\nCreated: ${this.formatFullDate(alert.created_at)}`);
     },
     contactEmergency(alert) {
-      if (alert.users && alert.users.phone) {
+      if (alert.users?.phone) {
         window.location.href = `tel:${alert.users.phone}`;
       } else {
-        alert('No contact number available.');
+        this.showNotification('No phone number available.', true);
       }
     },
     getUserName(user) {
-      return `${user.FirstName || ''} ${user.LastName || ''}`.trim() || user.email || 'Unknown User';
+      return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unknown User';
     },
     formatTime(timestamp) {
       const now = new Date();
@@ -211,11 +176,138 @@ export default {
     },
     formatFullDate(dateString) {
       return new Date(dateString).toLocaleString();
+    },
+    async registerDeviceForUser() {
+    try {
+        const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+        const macAddress = process.env.MAC_ADDRESS; 
+
+        await axios.post(`${baseUrl}/devices/register`, { mac: macAddress }, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+        });
+
+        console.log('✅ Device registered to current user');
+    } catch (error) {
+        console.error('❌ Failed to register device:', error);
+    }
+    },
+
+
+    showNotification(message, isError = false) {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.className = `notification ${isError ? 'error' : 'success'}`;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
     }
   }
 };
 </script>
 
 <style scoped>
-/* Your existing styles (as you already had) */
+.alerts-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-title {
+  font-size: 1.5rem;
+}
+.filter-dropdown {
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+.alerts-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.alert-card {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fdfdfd;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+.alert-card.urgent {
+  border-left: 4px solid #ff3b3b;
+  background-color: #fff3f3;
+}
+.alert-card.resolved {
+  background-color: #f0fdf4;
+  border-left: 4px solid #34d399;
+}
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.alert-message {
+  margin: 0.5rem 0;
+}
+.alert-meta {
+  font-size: 0.9rem;
+  color: #555;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.alert-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 5px;
+}
+.btn.handle {
+  background-color: #34d399;
+  color: white;
+}
+.btn.info {
+  background-color: #60a5fa;
+  color: white;
+}
+.btn.contact {
+  background-color: #fbbf24;
+  color: white;
+}
+.btn.trigger {
+  background-color: #ef4444;
+  color: white;
+}
+.notification {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  z-index: 1000;
+  animation: fadein 0.3s;
+}
+.notification.success {
+  background-color: #22c55e;
+}
+.notification.error {
+  background-color: #ef4444;
+}
+@keyframes fadein {
+  from { opacity: 0; right: 0; }
+  to { opacity: 1; right: 1rem; }
+}
 </style>

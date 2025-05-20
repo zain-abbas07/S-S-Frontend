@@ -93,19 +93,20 @@ adding: false,
     };
   },
   computed: {
-    calendarEvents() {
-      // Map your events to vue-cal's format
-      return this.events.map(ev => ({
-        ...ev,
-        id: ev.event_id,
-        start: ev.start_time,
-        end: ev.end_time,
-        title: ev.title,
-        content: ev.description,
-        class: ev.type // You can use this for color coding
-      }));
-    }
-  },
+  calendarEvents() {
+    const mapped = this.events.map(ev => ({
+      ...ev,
+      id: ev.event_id,
+      start: ev.start_time ? new Date(ev.start_time).toISOString() : null,
+      end: ev.end_time ? new Date(ev.end_time).toISOString() : null,
+      title: ev.title || "Untitled",
+      content: ev.description || "",
+      class: ev.type || "general"
+    }));
+    console.log("calendarEvents:", mapped);
+    return mapped;
+  }
+},
   created() {
     this.fetchEvents();
   },

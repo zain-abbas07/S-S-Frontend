@@ -6,6 +6,10 @@ import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
+import SubscriptionPage from './pages/SubscriptionPage.vue';
+import VoiceChat from '@/pages/VoiceChat.vue';
+
+
 Vue.use(Router);
 
 export default new Router({
@@ -33,7 +37,14 @@ export default new Router({
     { path: '/calendar', name: 'Calendar', component: CalendarPage },
     { path: '/map', name: 'Map', component: MapPage },
     
-{ path: '/medical-records', name: 'MedicalRecords', component: MedicalRecordsPage }
+{ path: '/medical-records', name: 'MedicalRecords', component: MedicalRecordsPage },
+{ path: '/subscription', name: 'Subscription', component: SubscriptionPage },
+{
+  path: '/voice-chat',
+  name: 'VoiceChat',
+  component: VoiceChat,
+  meta: { requiresAuth: true }
+}
 
   ]
 });

@@ -7,6 +7,7 @@ import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
 import AlertsPage from './pages/AlertsPage.vue';
+import AssignDeviceToPatient from './pages/AssignDeviceToPatient.vue';
 
 Vue.use(Router);
 
@@ -51,6 +52,11 @@ export default new Router({
       path: '/alerts',
       name: 'Alerts',
       component: AlertsPage
-    }
+    },
+    {
+    path: '/assign-device',
+    name: 'AssignDeviceToPatient',
+    component: AssignDeviceToPatient
+  }
   ]
 });

@@ -4,19 +4,40 @@
       <div class="alerts-section">
         <div class="section-header">
           <h2 class="section-title">🚨 Emergency Alerts</h2>
-          <select v-model="filterStatus" class="filter-dropdown">
-            <option value="all">All Alerts</option>
-            <option value="unhandled">Active</option>
-            <option value="handled">Handled</option>
-          </select>
+          <div class="header-controls">
+            <select 
+              v-if="userRole === 'caregiver'" 
+              v-model="selectedPatientId" 
+              class="patient-select"
+              @change="handlePatientChange"
+            >
+              <option value="">Select a patient</option>
+              <option 
+                v-for="patient in assignedPatients" 
+                :key="patient.id" 
+                :value="patient.id"
+              >
+                {{ getPatientName(patient) }}
+              </option>
+            </select>
+            <select v-model="filterStatus" class="filter-dropdown">
+              <option value="all">All Alerts</option>
+              <option value="unhandled">Active</option>
+              <option value="handled">Handled</option>
+            </select>
+          </div>
         </div>
 
-        <div v-if="loading" class="loading-state">
+        <div v-if="error" class="error-message">
+          {{ error }}
+        </div>
+
+        <div v-else-if="loading" class="loading-state">
           <p>Loading alerts...</p>
         </div>
 
         <div v-else-if="filteredAlerts.length === 0" class="no-alerts">
-          <p>No alerts to display</p>
+          <p>{{ userRole === 'caregiver' && !selectedPatientId ? 'Please select a patient to view alerts' : 'No alerts to display' }}</p>
         </div>
 
         <div v-else class="alerts-list">
@@ -32,10 +53,17 @@
             </div>
             <p class="alert-message">{{ alert.message }}</p>
             <div class="alert-meta">
-              <span>Device: {{ alert.device_id }}</span>
-              <span v-if="alert.users">User: {{ getUserName(alert.users) }}</span>
+              <span>Device: {{ alert.devices?.name || alert.device_id }}</span>
+              <span v-if="alert.patients?.users">
+                Patient: {{ getUserName(alert) }}
+                <span v-if="alert.patients.users.phone" class="phone-number">
+                  ({{ alert.patients.users.phone }})
+                </span>
+              </span>
               <span v-if="alert.lat && alert.lng">
-                <a :href="`https://maps.google.com/?q=${alert.lat},${alert.lng}`" target="_blank">📍 Location</a>
+                <a :href="`https://maps.google.com/?q=${alert.lat},${alert.lng}`" target="_blank" class="location-link">
+                  📍 View Location
+                </a>
               </span>
             </div>
             <div class="alert-actions">
@@ -43,12 +71,18 @@
                 Mark as Handled
               </button>
               <button class="btn info" @click="showDetails(alert)">Details</button>
-              <button class="btn contact" @click="contactEmergency(alert)">Call User</button>
+              <button 
+                v-if="alert.patients?.users?.phone" 
+                class="btn contact" 
+                @click="contactEmergency(alert)"
+              >
+                Call Patient
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="test-emergency-btn">
+        <div v-if="userRole === 'patient'" class="test-emergency-btn">
           <button @click="triggerTestAlert" :disabled="triggering" class="btn trigger">
             {{ triggering ? 'Sending...' : 'Test Emergency Alert' }}
           </button>
@@ -65,56 +99,137 @@ export default {
   name: 'AlertsPage',
   data() {
     return {
-      filterStatus: 'all',
+      patientId: localStorage.getItem('patientId'),
+      selectedPatientId: '',
+      assignedPatients: [],
       alerts: [],
       loading: true,
+      error: null,
+      filterStatus: 'all',
       triggering: false,
-      currentUser: JSON.parse(localStorage.getItem('profile')) || { id: null, device_id: null, email: null }
+      userRole: localStorage.getItem('userRole') || 'patient',
+      currentUser: JSON.parse(localStorage.getItem('user') || '{}')
     };
   },
-    created() {
-    if (this.currentUser?.id) {
-        this.registerDeviceForUser(); // 🔁 Assign device on load
-        this.fetchAlerts();
+  created() {
+    console.log('User Role:', this.userRole);
+    console.log('Patient ID:', this.patientId);
+    console.log('Current User:', this.currentUser);
+    
+    if (this.userRole === 'caregiver') {
+      this.fetchAssignedPatients();
     } else {
-        this.loading = false;
+      this.fetchAlerts();
     }
-
   },
   computed: {
     filteredAlerts() {
+      console.log('Computing filteredAlerts - Current alerts:', this.alerts);
+      console.log('Current filter status:', this.filterStatus);
       const filtered = this.filterStatus === 'all'
         ? this.alerts
         : this.alerts.filter(alert => this.filterStatus === 'handled' ? alert.handled : !alert.handled);
-      return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const sorted = filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      console.log('Filtered and sorted alerts:', sorted);
+      return sorted;
     }
   },
   methods: {
-    async fetchAlerts() {
-      this.loading = true;
+    async fetchAssignedPatients() {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No authentication token found');
+
         const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
-        const response = await axios.get(`${baseUrl}/alerts`, {
-          //params: { userId: this.currentUser.id },
+        const response = await axios.get(`${baseUrl}/caregivers/my-patients`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         });
-        this.alerts = response.data || [];
-        console.log('Fetched alerts:', this.alerts);
-      } catch (error) {
-        console.error('Error fetching alerts:', error);
+
+        this.assignedPatients = response.data;
+        if (this.assignedPatients.length > 0) {
+          this.selectedPatientId = this.assignedPatients[0].id;
+          this.fetchAlerts();
+        } else {
+          this.error = 'No patients assigned to you';
+          this.loading = false;
+        }
+      } catch (err) {
+        console.error('Error fetching assigned patients:', err);
+        this.error = 'Failed to load assigned patients';
+        this.loading = false;
+      }
+    },
+    handlePatientChange() {
+      this.patientId = this.selectedPatientId;
+      this.fetchAlerts();
+    },
+    getPatientName(patient) {
+      if (patient.users) {
+        return `${patient.users.first_name || ''} ${patient.users.last_name || ''}`.trim() || 
+               patient.users.email || 'Unknown Patient';
+      }
+      return 'Unknown Patient';
+    },
+    async fetchAlerts() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found. Please log in.');
+        }
+
+        if (this.userRole === 'patient') {
+          console.log('Fetching alerts for current patient using my-alerts endpoint');
+          const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+          const res = await axios.get(`${baseUrl}/alerts/my-alerts`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          this.alerts = Array.isArray(res.data) ? res.data : [res.data];
+          console.log('Received alerts:', this.alerts);
+          return;
+        }
+
+        if (!this.patientId) {
+          throw new Error('No patient selected');
+        }
+
+        console.log('Fetching alerts for patient:', this.patientId);
+        const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+        const res = await axios.get(`${baseUrl}/alerts?patientId=${this.patientId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        this.alerts = Array.isArray(res.data) ? res.data : [res.data];
+        console.log('Received alerts:', this.alerts);
+      } catch (err) {
+        console.error('Error fetching alerts:', err);
+        this.error = err.response?.data?.error || err.message || 'Failed to load alerts.';
+        this.alerts = [];
       } finally {
         this.loading = false;
       }
     },
     async triggerTestAlert() {
+      if (!this.patientId) {
+        this.showNotification('No patient selected', true);
+        return;
+      }
+
       this.triggering = true;
       try {
         const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
         const response = await axios.post(`${baseUrl}/alerts`, {
           message: '🚨 Test emergency alert from frontend',
-          device_id: this.currentUser.device_id
+          device_id: this.currentUser.device_id,
+          patient_id: parseInt(this.patientId)
         }, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -127,7 +242,7 @@ export default {
         }
       } catch (error) {
         console.error('Failed to trigger test alert:', error);
-        this.showNotification('❌ Failed to trigger test alert', true);
+        this.showNotification(error.response?.data?.error || 'Failed to trigger test alert', true);
       } finally {
         this.triggering = false;
       }
@@ -157,14 +272,18 @@ export default {
       alert(`Details:\n\nMessage: ${alert.message}\nCreated: ${this.formatFullDate(alert.created_at)}`);
     },
     contactEmergency(alert) {
-      if (alert.users?.phone) {
-        window.location.href = `tel:${alert.users.phone}`;
+      if (alert.patients?.users?.phone) {
+        window.location.href = `tel:${alert.patients.users.phone}`;
       } else {
         this.showNotification('No phone number available.', true);
       }
     },
-    getUserName(user) {
-      return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unknown User';
+    getUserName(alert) {
+      if (alert.patients?.users) {
+        const user = alert.patients.users;
+        return `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unknown User';
+      }
+      return 'Unknown User';
     },
     formatTime(timestamp) {
       const now = new Date();
@@ -309,5 +428,33 @@ export default {
 @keyframes fadein {
   from { opacity: 0; right: 0; }
   to { opacity: 1; right: 1rem; }
+}
+.header-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.patient-select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  min-width: 200px;
+}
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 5px;
+  margin: 1rem 0;
+}
+.phone-number {
+  color: #6b7280;
+  font-size: 0.9em;
+}
+.location-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+.location-link:hover {
+  text-decoration: underline;
 }
 </style>

@@ -9,6 +9,7 @@
           <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>
           <li v-if="isLoggedIn"><router-link to="/map">Map</router-link></li>
           <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
+          <li v-if="isLoggedIn"><router-link to="/alerts">Alerts</router-link></li>
           <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
           
           <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>

@@ -82,6 +82,7 @@ export default {
     };
   },
   computed: {
+
     weekDays() {
       const days = [];
       for (let i = 0; i < 7; i++) {
@@ -97,6 +98,22 @@ export default {
       return `${start} - ${end}`;
     }
   },
+
+  calendarEvents() {
+    const mapped = this.events.map(ev => ({
+      ...ev,
+      id: ev.event_id,
+      start: ev.start_time ? new Date(ev.start_time).toISOString() : null,
+      end: ev.end_time ? new Date(ev.end_time).toISOString() : null,
+      title: ev.title || "Untitled",
+      content: ev.description || "",
+      class: ev.type || "general"
+    }));
+    console.log("calendarEvents:", mapped);
+    return mapped;
+  }
+},
+
   created() {
     this.fetchEvents();
   },

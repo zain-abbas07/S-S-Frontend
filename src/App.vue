@@ -1,7 +1,14 @@
 <template>
   <div id="app">
+
     <Navbar v-if="showNavbar" />
+
+   
+    <keep-alive include="MapPage">
+
+
     <router-view/>
+    </keep-alive>
   </div>
 </template>
 

@@ -6,7 +6,15 @@ import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
+
 import HomePage from './pages/HomePage.vue';
+
+import SubscriptionPage from './pages/SubscriptionPage.vue';
+import VoiceChat from '@/pages/VoiceChat.vue';
+import AlertsPage from './pages/AlertsPage.vue';
+import AssignDeviceToPatient from './pages/AssignDeviceToPatient.vue';
+
+
 
 Vue.use(Router);
 
@@ -59,6 +67,29 @@ const router = new Router({
       path: '*',
       redirect: '/'
     }
+
+    
+{ path: '/subscription', name: 'Subscription', component: SubscriptionPage },
+{
+  path: '/voice-chat',
+  name: 'VoiceChat',
+  component: VoiceChat,
+  meta: { requiresAuth: true }
+}
+
+
+    {
+      path: '/alerts',
+      name: 'Alerts',
+      component: AlertsPage
+    },
+    {
+    path: '/assign-device',
+    name: 'AssignDeviceToPatient',
+    component: AssignDeviceToPatient
+  }
+
+
   ]
 });
 

@@ -1,27 +1,32 @@
 <template>
-    <nav class="navbar">
-      <div class="navbar-content">
-        <div class="navbar-brand">
-          <router-link to="/profile">Smart Safety</router-link>
+ Voice-Maps-Subscription
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-brand">
+        <router-link to="/profile">Smart Safety</router-link>
+
         </div>
-        <ul class="navbar-links">
-          <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
-          <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>
-          <li v-if="isLoggedIn"><router-link to="/map">Map</router-link></li>
-          <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
-          <li v-if="isLoggedIn"><router-link to="/alerts">Alerts</router-link></li>
-          <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
-          
-          <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
-          <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
-        </ul>
-        <div class="navbar-user" v-if="isLoggedIn && userName">
-          <span>Welcome, {{ userName }}</span>
-          <button @click="logout">Logout</button>
-        </div>
+        
+      
+      <ul class="navbar-links">
+        <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/map">Map</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/subscription">Subscription</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
+        
+        <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
+      </ul>
+      <div class="navbar-user" v-if="isLoggedIn && userName">
+        <span>Welcome, {{ userName }}</span>
+        <button @click="logout">Logout</button>
       </div>
-    </nav>
-  </template>
+    </div>
+  </nav>
+</template>
   
   <script>
   export default {

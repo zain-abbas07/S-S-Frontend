@@ -6,8 +6,11 @@ import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
+import SubscriptionPage from './pages/SubscriptionPage.vue';
+import VoiceChat from '@/pages/VoiceChat.vue';
 import AlertsPage from './pages/AlertsPage.vue';
 import AssignDeviceToPatient from './pages/AssignDeviceToPatient.vue';
+
 
 Vue.use(Router);
 
@@ -33,21 +36,20 @@ export default new Router({
       name: 'Signup',
       component: SignupPage
     },
-    {
-      path: '/calendar',
-      name: 'Calendar',
-      component: CalendarPage
-    },
-    {
-      path: '/map',
-      name: 'Map',
-      component: MapPage
-    },
-    {
-      path: '/medical-records',
-      name: 'MedicalRecords',
-      component: MedicalRecordsPage
-    },
+
+    { path: '/calendar', name: 'Calendar', component: CalendarPage },
+    { path: '/map', name: 'Map', component: MapPage },
+    
+{ path: '/medical-records', name: 'MedicalRecords', component: MedicalRecordsPage },
+{ path: '/subscription', name: 'Subscription', component: SubscriptionPage },
+{
+  path: '/voice-chat',
+  name: 'VoiceChat',
+  component: VoiceChat,
+  meta: { requiresAuth: true }
+}
+
+
     {
       path: '/alerts',
       name: 'Alerts',
@@ -58,5 +60,6 @@ export default new Router({
     name: 'AssignDeviceToPatient',
     component: AssignDeviceToPatient
   }
+
   ]
 });

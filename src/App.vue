@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <Navbar />
+    <keep-alive include="MapPage">
+
     <router-view/>
+    </keep-alive>
   </div>
 </template>
 

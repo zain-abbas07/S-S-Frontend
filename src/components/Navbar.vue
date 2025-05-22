@@ -1,9 +1,13 @@
 <template>
+ Voice-Maps-Subscription
   <nav class="navbar">
     <div class="navbar-content">
       <div class="navbar-brand">
         <router-link to="/profile">Smart Safety</router-link>
-      </div>
+
+        </div>
+        
+      
       <ul class="navbar-links">
         <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>

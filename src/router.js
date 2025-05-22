@@ -8,6 +8,8 @@ import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
+import AlertsPage from './pages/AlertsPage.vue';
+import AssignDeviceToPatient from './pages/AssignDeviceToPatient.vue';
 
 
 Vue.use(Router);
@@ -34,6 +36,7 @@ export default new Router({
       name: 'Signup',
       component: SignupPage
     },
+
     { path: '/calendar', name: 'Calendar', component: CalendarPage },
     { path: '/map', name: 'Map', component: MapPage },
     
@@ -45,6 +48,18 @@ export default new Router({
   component: VoiceChat,
   meta: { requiresAuth: true }
 }
+
+
+    {
+      path: '/alerts',
+      name: 'Alerts',
+      component: AlertsPage
+    },
+    {
+    path: '/assign-device',
+    name: 'AssignDeviceToPatient',
+    component: AssignDeviceToPatient
+  }
 
   ]
 });

@@ -1,7 +1,11 @@
 <template>
   <div id="app">
-    <Navbar />
+
+    <Navbar v-if="showNavbar" />
+
+   
     <keep-alive include="MapPage">
+
 
     <router-view/>
     </keep-alive>
@@ -10,8 +14,17 @@
 
 <script>
 import Navbar from './components/Navbar.vue';
+
 export default {
-  components: { Navbar }
+  name: 'App',
+  components: { Navbar },
+  computed: {
+    showNavbar() {
+      // Don't show navbar on login and signup pages
+      const publicRoutes = ['/login', '/signup', '/'];
+      return !publicRoutes.includes(this.$route.path);
+    }
+  }
 }
 </script>
 

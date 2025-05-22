@@ -66,7 +66,7 @@ const router = new Router({
     {
       path: '*',
       redirect: '/'
-    }
+    },
 
     
 { path: '/subscription', name: 'Subscription', component: SubscriptionPage },
@@ -75,7 +75,7 @@ const router = new Router({
   name: 'VoiceChat',
   component: VoiceChat,
   meta: { requiresAuth: true }
-}
+},
 
 
     {

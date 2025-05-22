@@ -1,5 +1,4 @@
 <template>
- Voice-Maps-Subscription
   <nav class="navbar">
     <div class="navbar-content">
       <div class="navbar-brand">
@@ -15,8 +14,8 @@
         <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/subscription">Subscription</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/alerts">Alerts</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
-        
         <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
       </ul>

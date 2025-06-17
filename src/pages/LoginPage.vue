@@ -66,6 +66,14 @@
           localStorage.setItem("token", token);
           localStorage.setItem("userId", userId);
           
+          // ✅ Step 1: Fetch the user role
+          const userRes = await axios.get(`/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const role = userRes.data.role;
+          localStorage.setItem("role", role);
+
+          
             // Fetch patientId for this user (if patient)
             try {
             const res = await axios.get(`/api/patients`, {

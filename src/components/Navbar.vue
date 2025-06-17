@@ -77,22 +77,36 @@
         this.$router.push("/login");
       },
         async checkActiveAlerts() {
-    try {
-      const token = localStorage.getItem("token");
-      const patientId = localStorage.getItem("patientId");
-      if (!token || !patientId) return;
+        try {
+          const token = localStorage.getItem("token");
+          const profile = JSON.parse(localStorage.getItem("profile") || "null");
 
-      const response = await fetch(`/api/alerts?patientId=${patientId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+          if (!token || !profile) return;
+
+          let url = "";
+
+          if (profile.role === "caregiver") {
+            url = "/api/alerts/for-caregiver"; // caregiver route
+          } else if (profile.role === "patient") {
+            const patientId = localStorage.getItem("patientId");
+            if (!patientId) return;
+            url = `/api/alerts?patientId=${patientId}`; // patient route
+          } else {
+            return; // not a role that should fetch alerts
+          }
+
+          const response = await fetch(url, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          const alerts = await response.json();
+          this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
+        } catch (err) {
+          console.error("Failed to check alerts:", err);
         }
-      });
-      const alerts = await response.json();
-      this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
-    } catch (err) {
-      console.error("Failed to check alerts:", err);
-    }
-  }
+      }
     }
   };
   

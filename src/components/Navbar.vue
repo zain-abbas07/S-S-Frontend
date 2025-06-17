@@ -14,7 +14,11 @@
         <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/subscription">Subscription</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
-        <li v-if="isLoggedIn"><router-link to="/alerts">Alerts</router-link></li>
+        <li v-if="isLoggedIn">
+          <router-link to="/alerts">
+            Alerts <span v-if="hasActiveAlerts" style="color: red;">!</span>
+          </router-link>
+        </li>
         <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
@@ -33,11 +37,19 @@
     data() {
       return {
         userName: null,
-        isLoggedIn: false
+        isLoggedIn: false,
+        hasActiveAlerts: false
       };
     },
     created() {
       this.setUser();
+      this.checkActiveAlerts();
+    },
+    mounted() {
+      this.alertCheckInterval = setInterval(this.checkActiveAlerts, 10000); // every 10 seconds
+    },
+    beforeDestroy() {
+      clearInterval(this.alertCheckInterval);
     },
     watch: {
       $route() {
@@ -63,9 +75,27 @@
         this.isLoggedIn = false;
         this.userName = null;
         this.$router.push("/login");
-      }
+      },
+        async checkActiveAlerts() {
+    try {
+      const token = localStorage.getItem("token");
+      const patientId = localStorage.getItem("patientId");
+      if (!token || !patientId) return;
+
+      const response = await fetch(`/api/alerts?patientId=${patientId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const alerts = await response.json();
+      this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
+    } catch (err) {
+      console.error("Failed to check alerts:", err);
+    }
+  }
     }
   };
+  
   </script>
   
   <style scoped>

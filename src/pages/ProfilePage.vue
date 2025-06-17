@@ -26,6 +26,7 @@
 
       </div>
       <button @click="editMode = true">Edit Profile</button>
+      <button @click="$router.push('/link-patient')">View Patient ID</button>
   
       <div v-if="editMode" class="edit-form">
         <h3>Edit Profile</h3>

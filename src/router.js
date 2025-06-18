@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage.vue';
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
 import AlertsPage from './pages/AlertsPage.vue';
+import AlertDetailsPage from './pages/AlertDetails.vue';
 import AssignDeviceToPatient from './pages/AssignDeviceToPatient.vue';
 
 
@@ -64,32 +65,36 @@ const router = new Router({
       meta: { requiresAuth: true }
     },
     {
-      path: '*',
-      redirect: '/'
+      path: '/subscription',
+      name: 'Subscription',
+      component: SubscriptionPage
     },
-
-    
-{ path: '/subscription', name: 'Subscription', component: SubscriptionPage },
-{
-  path: '/voice-chat',
-  name: 'VoiceChat',
-  component: VoiceChat,
-  meta: { requiresAuth: true }
-},
-
-
+    {
+      path: '/voice-chat',
+      name: 'VoiceChat',
+      component: VoiceChat,
+      meta: { requiresAuth: true }
+    },
     {
       path: '/alerts',
       name: 'Alerts',
       component: AlertsPage
     },
     {
-    path: '/assign-device',
-    name: 'AssignDeviceToPatient',
-    component: AssignDeviceToPatient
-  }
-
-
+      path: '/alerts/:id',
+      name: 'AlertDetails',
+      component: AlertDetailsPage,
+      props: true
+    },
+    {
+      path: '/assign-device',
+      name: 'AssignDeviceToPatient',
+      component: AssignDeviceToPatient
+    },
+    {
+      path: '*',
+      redirect: '/'
+    }
   ]
 });
 

@@ -6,8 +6,10 @@ import SignupPage from './pages/SignupPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
-
+import CaregiverSignupPage from './pages/CaregiverSignupPage.vue';
 import HomePage from './pages/HomePage.vue';
+import LinkPage from './pages/LinkPage.vue';
+import LinkCaregiver from './pages/LinkCaregiver.vue';
 
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
@@ -38,6 +40,12 @@ const router = new Router({
       path: '/signup',
       name: 'Signup',
       component: SignupPage,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/caregiver-signup',
+      name: 'CaregiverSignup',
+      component: CaregiverSignupPage,
       meta: { requiresAuth: false }
     },
     {
@@ -74,6 +82,20 @@ const router = new Router({
       name: 'VoiceChat',
       component: VoiceChat,
       meta: { requiresAuth: true }
+      path: '/link-patient',
+      name: 'LinkPatient',
+      component: LinkPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/link-caregiver',
+      name: 'LinkCaregiver',
+      component: LinkCaregiver,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '*',
+      redirect: '/'
     },
     {
       path: '/alerts',
@@ -111,7 +133,7 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login');
-  } else if ((to.path === '/login' || to.path === '/signup') && isAuthenticated) {
+  } else if ((to.path === '/login' || to.path === '/signup' || to.path === '/caregiver-signup') && isAuthenticated) {
     next('/profile');
   } else {
     next();

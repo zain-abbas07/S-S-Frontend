@@ -1,15 +1,8 @@
 <template>
   <div class="signup-page">
-    <h2>Sign Up</h2>
+    <h2>Patient Sign Up</h2>
+    <p class="notice">This form is for patient accounts only.</p>
     <form @submit.prevent="signup">
-      <div class="form-group">
-        <label for="role">I am a:</label>
-        <select v-model="role" id="role" required>
-          <option disabled value="">Select role</option>
-          <option value="patient">Patient</option>
-          <option value="caregiver">Caregiver</option>
-        </select>
-      </div>
       <div class="form-group">
         <label for="email">Email</label>
         <input v-model="email" type="email" id="email" required autocomplete="username" placeholder="Enter your email" />
@@ -124,7 +117,6 @@ export default {
   name: "SignupPage",
   data() {
     return {
-      role: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -161,16 +153,12 @@ export default {
         this.error = "Passwords do not match.";
         return;
       }
-      if (!this.role) {
-        this.error = "Please select if you are a patient or caregiver.";
-        return;
-      }
       this.loading = true;
       try {
         await axios.post("/api/auth/register", {
           email: this.email,
           password: this.password,
-          role: this.role,
+          role: 'patient',
           first_name: this.first_name,
           last_name: this.last_name,
           address: this.address,
@@ -271,5 +259,9 @@ button:disabled {
   color: #388e3c;
   margin-top: 1rem;
   text-align: center;
+}
+.notice {
+  margin-bottom: 1rem;
+  text-align: left;
 }
 </style>

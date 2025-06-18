@@ -269,8 +269,8 @@ export default {
       }
     },
     showDetails(alert) {
-      alert(`Details:\n\nMessage: ${alert.message}\nCreated: ${this.formatFullDate(alert.created_at)}`);
-    },
+    this.$router.push({ name: 'AlertDetails', params: { id: alert.id } });
+  },
     contactEmergency(alert) {
       if (alert.patients?.users?.phone) {
         window.location.href = `tel:${alert.patients.users.phone}`;

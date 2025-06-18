@@ -70,7 +70,7 @@
               <button v-if="!alert.handled" class="btn handle" @click="markAsHandled(alert.id)">
                 Mark as Handled
               </button>
-              <button class="btn info" @click="showDetails(alert)">Details</button>
+              <router-link :to="`/alerts/${alert.id}`" class="btn info">Details</router-link>
               <button 
                 v-if="alert.patients?.users?.phone" 
                 class="btn contact" 
@@ -94,6 +94,7 @@
 
 <script>
 import axios from 'axios';
+import { eventBus } from '@/eventBus';
 
 export default {
   name: 'AlertsPage',
@@ -217,6 +218,7 @@ export default {
         this.loading = false;
       }
     },
+    
     async triggerTestAlert() {
       if (!this.patientId) {
         this.showNotification('No patient selected', true);
@@ -257,6 +259,7 @@ export default {
         });
 
         const updatedAlert = response.data;
+        eventBus.emit('alerts-updated');
         const index = this.alerts.findIndex(a => a.id === alertId);
         if (index !== -1) {
           this.alerts.splice(index, 1, updatedAlert);
@@ -268,9 +271,7 @@ export default {
         this.showNotification('❌ Failed to update alert', true);
       }
     },
-    showDetails(alert) {
-      alert(`Details:\n\nMessage: ${alert.message}\nCreated: ${this.formatFullDate(alert.created_at)}`);
-    },
+
     contactEmergency(alert) {
       if (alert.patients?.users?.phone) {
         window.location.href = `tel:${alert.patients.users.phone}`;

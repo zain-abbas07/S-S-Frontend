@@ -32,6 +32,8 @@
 </template>
   
   <script>
+  import { eventBus } from '@/eventBus';
+
   export default {
     name: "AppNavbar",
     data() {
@@ -44,12 +46,16 @@
     created() {
       this.setUser();
       this.checkActiveAlerts();
+      eventBus.on('alerts-updated', this.checkActiveAlerts);
+
     },
     mounted() {
       this.alertCheckInterval = setInterval(this.checkActiveAlerts, 10000); // every 10 seconds
     },
     beforeDestroy() {
       clearInterval(this.alertCheckInterval);
+      eventBus.off('alerts-updated', this.checkActiveAlerts);
+
     },
     watch: {
       $route() {

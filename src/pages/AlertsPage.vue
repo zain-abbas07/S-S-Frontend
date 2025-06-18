@@ -94,6 +94,7 @@
 
 <script>
 import axios from 'axios';
+import { eventBus } from '@/eventBus';
 
 export default {
   name: 'AlertsPage',
@@ -258,6 +259,7 @@ export default {
         });
 
         const updatedAlert = response.data;
+        eventBus.emit('alerts-updated');
         const index = this.alerts.findIndex(a => a.id === alertId);
         if (index !== -1) {
           this.alerts.splice(index, 1, updatedAlert);

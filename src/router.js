@@ -81,11 +81,13 @@ const router = new Router({
       path: '/voice-chat',
       name: 'VoiceChat',
       component: VoiceChat,
-      meta: { requiresAuth: true }
-      path: '/link-patient',
-      name: 'LinkPatient',
-      component: LinkPage,
-      meta: { requiresAuth: true }
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/link-patient',
+        name: 'LinkPatient',
+        component: LinkPage,
+        meta: { requiresAuth: true }
     },
     {
       path: '/link-caregiver',

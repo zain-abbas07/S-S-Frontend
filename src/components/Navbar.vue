@@ -1,5 +1,4 @@
 <template>
- Voice-Maps-Subscription
   <nav class="navbar">
     <div class="navbar-content">
       <div class="navbar-brand">
@@ -15,8 +14,12 @@
         <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/subscription">Subscription</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/medical-records">Medical Records</router-link></li>
+        <li v-if="isLoggedIn">
+          <router-link to="/alerts">
+            Alerts <span v-if="hasActiveAlerts" style="color: red;">!</span>
+          </router-link>
+        </li>
         <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
-        
         <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
       </ul>
@@ -29,16 +32,30 @@
 </template>
   
   <script>
+  import { eventBus } from '@/eventBus';
+
   export default {
     name: "AppNavbar",
     data() {
       return {
         userName: null,
-        isLoggedIn: false
+        isLoggedIn: false,
+        hasActiveAlerts: false
       };
     },
     created() {
       this.setUser();
+      this.checkActiveAlerts();
+      eventBus.on('alerts-updated', this.checkActiveAlerts);
+
+    },
+    mounted() {
+      this.alertCheckInterval = setInterval(this.checkActiveAlerts, 10000); // every 10 seconds
+    },
+    beforeDestroy() {
+      clearInterval(this.alertCheckInterval);
+      eventBus.off('alerts-updated', this.checkActiveAlerts);
+
     },
     watch: {
       $route() {
@@ -64,9 +81,41 @@
         this.isLoggedIn = false;
         this.userName = null;
         this.$router.push("/login");
+      },
+        async checkActiveAlerts() {
+        try {
+          const token = localStorage.getItem("token");
+          const profile = JSON.parse(localStorage.getItem("profile") || "null");
+
+          if (!token || !profile) return;
+
+          let url = "";
+
+          if (profile.role === "caregiver") {
+            url = "/api/alerts/for-caregiver"; // caregiver route
+          } else if (profile.role === "patient") {
+            const patientId = localStorage.getItem("patientId");
+            if (!patientId) return;
+            url = `/api/alerts?patientId=${patientId}`; // patient route
+          } else {
+            return; // not a role that should fetch alerts
+          }
+
+          const response = await fetch(url, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          const alerts = await response.json();
+          this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
+        } catch (err) {
+          console.error("Failed to check alerts:", err);
+        }
       }
     }
   };
+  
   </script>
   
   <style scoped>

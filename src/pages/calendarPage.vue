@@ -65,12 +65,14 @@ export default {
   name: "CalendarPage",
   data() {
     const today = new Date();
-    const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
     return {
       events: [],
       loading: false,
       error: null,
-      currentWeekStart: new Date(weekStart),
+      currentWeekStart: startOfWeek,
       newEvent: {
         title: "",
         description: "",
@@ -82,13 +84,12 @@ export default {
     };
   },
   computed: {
-
     weekDays() {
       const days = [];
       for (let i = 0; i < 7; i++) {
-        const date = new Date(this.currentWeekStart);
-        date.setDate(this.currentWeekStart.getDate() + i);
-        days.push(date);
+        const day = new Date(this.currentWeekStart);
+        day.setDate(this.currentWeekStart.getDate() + i);
+        days.push(new Date(day)); // avoid mutation issues
       }
       return days;
     },
@@ -98,35 +99,28 @@ export default {
       return `${start} - ${end}`;
     }
   },
-
-  calendarEvents() {
-    const mapped = this.events.map(ev => ({
-      ...ev,
-      id: ev.event_id,
-      start: ev.start_time ? new Date(ev.start_time).toISOString() : null,
-      end: ev.end_time ? new Date(ev.end_time).toISOString() : null,
-      title: ev.title || "Untitled",
-      content: ev.description || "",
-      class: ev.type || "general"
-    }));
-    console.log("calendarEvents:", mapped);
-    return mapped;
-  }
-},
-
   created() {
     this.fetchEvents();
   },
   methods: {
     formatDate(dt) {
-      return new Date(dt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return new Date(dt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     },
     formatDateLabel(date) {
-      return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      });
     },
     eventsOnDay(date) {
       const dayStr = date.toISOString().split("T")[0];
-      return this.events.filter(ev => new Date(ev.start_time).toISOString().split("T")[0] === dayStr);
+      return this.events.filter(ev =>
+        new Date(ev.start_time).toISOString().startsWith(dayStr)
+      );
     },
     goToPreviousWeek() {
       const prev = new Date(this.currentWeekStart);
@@ -158,15 +152,19 @@ export default {
       this.error = null;
       try {
         const token = localStorage.getItem("token");
-        await axios.post("/api/events", {
-          title: this.newEvent.title,
-          description: this.newEvent.description,
-          start_time: this.newEvent.start_time,
-          end_time: this.newEvent.end_time,
-          type: this.newEvent.type
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(
+          "/api/events",
+          {
+            title: this.newEvent.title,
+            description: this.newEvent.description,
+            start_time: this.newEvent.start_time,
+            end_time: this.newEvent.end_time,
+            type: this.newEvent.type
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
 
         this.newEvent = {
           title: "",

@@ -158,59 +158,87 @@
   
   <style scoped>
   .medical-records-page {
-    max-width: 700px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 2px 8px #0001;
-  }
-  .record-list {
-    list-style: none;
-    padding: 0;
-  }
-  .record-item {
-    border-bottom: 1px solid #eee;
-    padding: 1rem 0;
-  }
-  .add-record {
-    margin-top: 2rem;
-    background: #f9f9f9;
-    padding: 1rem;
-    border-radius: 6px;
-  }
-  .form-group {
-    margin-bottom: 1rem;
-  }
-  label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-weight: bold;
-  }
-  input, textarea {
-    width: 100%;
-    padding: 0.4rem;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-  button {
-    margin-top: 0.5rem;
-    background: #42b983;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  button:disabled {
-    background: #b2dfdb;
-    cursor: not-allowed;
-  }
-  .error {
-    color: #d32f2f;
-    margin-bottom: 1rem;
-    text-align: center;
-  }
+  max-width: 700px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px #0001;
+}
+
+.record-list {
+  list-style: none;
+  padding: 0;
+}
+
+.record-item {
+  border: 1px solid #ddd;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.record-item > *:not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+
+.record-item button {
+  margin-right: 0.5rem;
+}
+
+.record-item form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.add-record {
+  margin-top: 2rem;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  margin-top: 0.5rem;
+  background: #42b983;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #b2dfdb;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
   </style>

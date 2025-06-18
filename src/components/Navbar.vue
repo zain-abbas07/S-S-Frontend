@@ -40,7 +40,8 @@
       return {
         userName: null,
         isLoggedIn: false,
-        hasActiveAlerts: false
+        hasActiveAlerts: false,
+        previousAlertIds: []
       };
     },
     created() {
@@ -50,6 +51,8 @@
 
     },
     mounted() {
+      console.log('Navbar mounted!');
+      this.checkActiveAlerts();
       this.alertCheckInterval = setInterval(this.checkActiveAlerts, 10000); // every 10 seconds
     },
     beforeDestroy() {
@@ -83,24 +86,31 @@
         this.$router.push("/login");
       },
         async checkActiveAlerts() {
+        const token = localStorage.getItem("token");
+        let profile = JSON.parse(localStorage.getItem("profile") || "null");
+        if (!profile) {
+          profile = JSON.parse(localStorage.getItem("user") || "null");
+        }
+        const patientId = localStorage.getItem("patientId");
+        console.log('[Navbar] token:', token);
+        console.log('[Navbar] profile:', profile);
+        console.log('[Navbar] profile.role:', profile && profile.role);
+        console.log('[Navbar] patientId:', patientId);
         try {
-          const token = localStorage.getItem("token");
-          const profile = JSON.parse(localStorage.getItem("profile") || "null");
-
           if (!token || !profile) return;
 
           let url = "";
 
           if (profile.role === "caregiver") {
             url = "/api/alerts/for-caregiver"; // caregiver route
-          } else if (profile.role === "patient") {
-            const patientId = localStorage.getItem("patientId");
+          } else if (profile.role === "patient" || profile.role === "USER") {
             if (!patientId) return;
             url = `/api/alerts?patientId=${patientId}`; // patient route
           } else {
             return; // not a role that should fetch alerts
           }
 
+          console.log('[Navbar] Fetching alerts from:', url);
           const response = await fetch(url, {
             headers: {
               Authorization: `Bearer ${token}`
@@ -108,7 +118,35 @@
           });
 
           const alerts = await response.json();
+          console.log('[Navbar] Received alerts:', alerts);
           this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
+          console.log('[Navbar] hasActiveAlerts:', this.hasActiveAlerts);
+          // New alert notification logic
+          const unhandledAlerts = alerts.filter(alert => alert.handled === false);
+          const newIds = unhandledAlerts.map(a => a.id);
+          console.log('[Navbar] Previous unhandled IDs:', this.previousAlertIds, 'New unhandled IDs:', newIds);
+          if (this.previousAlertIds.length > 0) {
+            const newAlertFound = newIds.some(id => !this.previousAlertIds.includes(id));
+            console.log('[Navbar] New unhandled alert found:', newAlertFound);
+            if (newAlertFound) {
+              console.log('[Navbar] Emitting global-notification event');
+              // Always emit via eventBus and ensure message is set
+              if (typeof require === 'function') {
+                try {
+                  const { eventBus } = require('@/eventBus');
+                  eventBus.emit('global-notification', { message: 'New emergency alert received!', type: 'info' });
+                } catch (e) {
+                  // fallback if require fails
+                  if (window.eventBus) {
+                    window.eventBus.emit('global-notification', { message: 'New emergency alert received!', type: 'info' });
+                  }
+                }
+              } else if (window.eventBus) {
+                window.eventBus.emit('global-notification', { message: 'New emergency alert received!', type: 'info' });
+              }
+            }
+          }
+          this.previousAlertIds = newIds;
         } catch (err) {
           console.error("Failed to check alerts:", err);
         }

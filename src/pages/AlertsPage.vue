@@ -82,11 +82,6 @@
           </div>
         </div>
 
-        <div v-if="userRole === 'patient'" class="test-emergency-btn">
-          <button @click="triggerTestAlert" :disabled="triggering" class="btn trigger">
-            {{ triggering ? 'Sending...' : 'Test Emergency Alert' }}
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -94,6 +89,7 @@
 
 <script>
 import axios from 'axios';
+import { eventBus } from '@/eventBus';
 
 export default {
   name: 'AlertsPage',
@@ -108,7 +104,8 @@ export default {
       filterStatus: 'all',
       triggering: false,
       userRole: localStorage.getItem('userRole') || 'patient',
-      currentUser: JSON.parse(localStorage.getItem('user') || '{}')
+      currentUser: JSON.parse(localStorage.getItem('user') || '{}'),
+      previousAlertIds: []
     };
   },
   created() {
@@ -121,6 +118,10 @@ export default {
     } else {
       this.fetchAlerts();
     }
+    this.pollingInterval = setInterval(this.fetchAlerts, 10000);
+  },
+  beforeDestroy() {
+    if (this.pollingInterval) clearInterval(this.pollingInterval);
   },
   computed: {
     filteredAlerts() {
@@ -190,7 +191,10 @@ export default {
               'Content-Type': 'application/json'
             }
           });
-          this.alerts = Array.isArray(res.data) ? res.data : [res.data];
+          const newAlerts = Array.isArray(res.data) ? res.data : [res.data];
+          this.checkForNewAlerts(newAlerts);
+          this.alerts = newAlerts;
+          eventBus.emit('alerts-updated', this.alerts);
           console.log('Received alerts:', this.alerts);
           return;
         }
@@ -207,46 +211,34 @@ export default {
             'Content-Type': 'application/json'
           }
         });
-        this.alerts = Array.isArray(res.data) ? res.data : [res.data];
+        const newAlerts = Array.isArray(res.data) ? res.data : [res.data];
+        this.checkForNewAlerts(newAlerts);
+        this.alerts = newAlerts;
+        eventBus.emit('alerts-updated', this.alerts);
         console.log('Received alerts:', this.alerts);
       } catch (err) {
         console.error('Error fetching alerts:', err);
         this.error = err.response?.data?.error || err.message || 'Failed to load alerts.';
         this.alerts = [];
+        eventBus.emit('alerts-updated', this.alerts);
       } finally {
         this.loading = false;
       }
     },
-    async triggerTestAlert() {
-      if (!this.patientId) {
-        this.showNotification('No patient selected', true);
-        return;
-      }
-
-      this.triggering = true;
-      try {
-        const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
-        const response = await axios.post(`${baseUrl}/alerts`, {
-          message: '🚨 Test emergency alert from frontend',
-          device_id: this.currentUser.device_id,
-          patient_id: parseInt(this.patientId)
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.data?.alert) {
-          this.alerts.unshift(response.data.alert);
-          this.showNotification('✅ Test alert sent successfully');
+    checkForNewAlerts(newAlerts) {
+      const newIds = newAlerts.map(a => a.id);
+      console.log('[AlertsPage] Previous IDs:', this.previousAlertIds, 'New IDs:', newIds);
+      if (this.previousAlertIds.length > 0) {
+        const newAlertFound = newIds.some(id => !this.previousAlertIds.includes(id));
+        console.log('[AlertsPage] New alert found:', newAlertFound);
+        if (newAlertFound) {
+          console.log('[AlertsPage] Emitting global-notification event');
+          eventBus.emit('global-notification', { message: 'New emergency alert received!' });
         }
-      } catch (error) {
-        console.error('Failed to trigger test alert:', error);
-        this.showNotification(error.response?.data?.error || 'Failed to trigger test alert', true);
-      } finally {
-        this.triggering = false;
       }
+      this.previousAlertIds = newIds;
     },
+
     async markAsHandled(alertId) {
       try {
         const baseUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
@@ -263,6 +255,7 @@ export default {
         }
 
         this.showNotification('✅ Alert marked as handled');
+        eventBus.emit('alerts-updated', this.alerts);
       } catch (error) {
         console.error('Failed to update alert:', error);
         this.showNotification('❌ Failed to update alert', true);

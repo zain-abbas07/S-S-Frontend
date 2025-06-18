@@ -5,7 +5,7 @@
       <p>Your one-stop solution for managing your patient's needs</p>
       <div class="cta-buttons">
         <router-link to="/login" class="btn btn-primary">Login</router-link>
-        <router-link to="/signup" class="btn btn-secondary">Sign Up</router-link>
+        <router-link to="/role-selection" class="btn btn-secondary">Sign Up</router-link>
       </div>
     </div>
   </div>

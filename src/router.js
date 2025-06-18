@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import ProfilePage from './pages/ProfilePage.vue';
 import LoginPage from './pages/LoginPage.vue';
 import SignupPage from './pages/SignupPage.vue';
+import RolePage from './pages/roleSelectionPage.vue';
 import CalendarPage from './pages/calendarPage.vue';
 import MapPage from './pages/MapPage.vue';
 import MedicalRecordsPage from './pages/MedicalRecordsPage.vue';
@@ -33,6 +34,12 @@ const router = new Router({
       path: '/login',
       name: 'Login',
       component: LoginPage,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/role-selection',
+      name: 'RoleSelection',
+      component: RolePage,
       meta: { requiresAuth: false }
     },
     {

@@ -17,7 +17,7 @@
         <li v-if="isLoggedIn"><router-link to="/alerts">Alerts</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
-        <li v-if="!isLoggedIn"><router-link to="/signup">Signup</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/role-selection">Signup</router-link></li>
       </ul>
       <div class="navbar-user" v-if="isLoggedIn && userName">
         <span>Welcome, {{ userName }}</span>

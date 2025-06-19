@@ -58,12 +58,11 @@ export default {
       editMode: false,
       error: null,
     }
-  }, // ←✅ This comma is required before methods
-
+  },
   async created() {
     try {
-      const userId = localStorage.getItem('userId') // ✅ Fix: define userId here
       const token = localStorage.getItem('token')
+      const userId = localStorage.getItem('userId')
 
       const res = await axios.get(`/api/caregivers/${userId}/linked-patients`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -71,36 +70,38 @@ export default {
 
       this.caregiver = res.data.caregiver
       this.patients = res.data.patients
-      this.edit = { ...res.data.caregiver }
+      this.edit = { ...res.data.caregiver } // Prepare editable copy
     } catch (err) {
       console.error('[CaregiverProfile.vue] Error fetching data:', err)
       this.error = err.response?.data?.error || 'Failed to load caregiver profile.'
     }
   },
-
   methods: {
-    async updateProfile() {
-      try {
-        const token = localStorage.getItem('token')
+  async updateProfile() {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
 
-        console.log('Submitting profile update:', this.edit)
-
-        const res = await axios.put(`/api/users/caregivers/${this.caregiver.id}/update-profile`, this.edit, {
+      const res = await axios.put(
+        `/api/users/caregivers/by-user/${userId}/update-profile`,
+        this.edit,
+        {
           headers: { Authorization: `Bearer ${token}` },
-        })
+        }
+      );
 
-        this.caregiver = res.data
-        this.editMode = false
-      } catch (err) {
-        this.error = err.response?.data?.error || 'Failed to update caregiver profile.'
-        console.error('[CaregiverProfile.vue] Update error:', err)
-      }
+      this.caregiver = res.data;
+      this.editMode = false;
+    } catch (err) {
+      console.error('[CaregiverProfile.vue] Update error:', err);
+      this.error = err.response?.data?.error || 'Failed to update caregiver profile.';
+      alert(this.error);
     }
-  }
+  },
+}
+
 }
 </script>
-
-
 
 <style scoped>
 .caregiver-profile {

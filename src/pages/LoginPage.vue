@@ -88,7 +88,7 @@
             // It's ok if not a patient, just skip
             }
           // Redirect to profile or home
-          this.$router.push("/profile");
+          this.$router.push("/profile-account");
         } catch (err) {
           if (err.response && err.response.data && err.response.data.error) {
             this.error = err.response.data.error;

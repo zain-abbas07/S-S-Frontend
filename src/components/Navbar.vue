@@ -6,7 +6,7 @@
       </div>
 
       <ul class="navbar-links">
-        <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/profile-account">Profile</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/map">Map</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>

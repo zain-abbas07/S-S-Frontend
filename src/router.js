@@ -12,6 +12,8 @@ import HomePage from './pages/HomePage.vue';
 import LinkPage from './pages/LinkPage.vue';
 import LinkCaregiver from './pages/LinkCaregiver.vue';
 import LinkAccount from './pages/LinkAccount.vue';
+import ProfileCaregiver from './pages/ProfileCaregiver.vue';
+import ProfileAccount from './pages/ProfileAccount.vue';
 
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
@@ -60,6 +62,18 @@ const router = new Router({
       path: '/profile',
       name: 'Profile',
       component: ProfilePage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/profile-account',
+      name: 'ProfileAccount',
+      component: ProfileAccount,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/profile-caregiver',
+      name: 'ProfileCaregiver',
+      component: ProfileCaregiver,
       meta: { requiresAuth: true }
     },
     {

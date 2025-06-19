@@ -24,12 +24,12 @@
           </router-link>
         </li>
 
-        <li v-if="isLoggedIn"><router-link to="/login">Logout</router-link></li>
+        
         <li v-if="!isLoggedIn"><router-link to="/login">Login</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/role-selection">Signup</router-link></li>
       </ul>
 
-      <div class="navbar-user" v-if="isLoggedIn && userName">
+      <div class="navbar-user" v-if="isLoggedIn">
         <span>Welcome, {{ userName }}</span>
         <button @click="logout">Logout</button>
       </div>

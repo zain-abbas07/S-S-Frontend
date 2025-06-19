@@ -1,6 +1,15 @@
 <template>
     <div class="medical-records-page">
-      <h2>Medical Records</h2>
+      <div class="page-header">
+        <button v-if="isViewingOtherPatient" @click="goBackToPatient" class="back-button">
+          ← Back to Patient
+        </button>
+        <h2>{{ isViewingOtherPatient ? `${patientName} - Medical Records` : 'Medical Records' }}</h2>
+        <div v-if="isViewingOtherPatient" class="viewing-indicator">
+          <span>👁️ Viewing as Caregiver</span>
+        </div>
+      </div>
+      
       <div v-if="error" class="error">{{ error }}</div>
       <div v-if="loading">Loading records...</div>
       <div v-else>
@@ -10,8 +19,11 @@
               <strong>{{ record.medical_condition || 'No Condition' }}</strong>
               <div><em>{{ formatDate(record.created_at) }}</em></div>
               <div>{{ record.notes }}</div>
-              <button @click="startEdit(record)">Edit</button>
-              <button @click="deleteRecord(record.record_id)">Delete</button>
+              <!-- Only show edit/delete buttons if not viewing as caregiver -->
+              <div v-if="!isViewingOtherPatient" class="record-actions">
+                <button @click="startEdit(record)">Edit</button>
+                <button @click="deleteRecord(record.record_id)">Delete</button>
+              </div>
             </div>
             <div v-else>
               <form @submit.prevent="saveEdit(record.record_id)">
@@ -25,7 +37,9 @@
         </ul>
         <div v-if="records.length === 0">No medical records yet.</div>
       </div>
-      <div class="add-record">
+      
+      <!-- Only show add record form if not viewing as caregiver -->
+      <div v-if="!isViewingOtherPatient" class="add-record">
         <h3>Add Medical Record</h3>
         <form @submit.prevent="addRecord">
           <div class="form-group">
@@ -61,39 +75,57 @@
         editRecord: {
           medical_condition: "",
           notes: ""
-        }
+        },
+        patientName: null
       };
     },
-    created() {
-      this.fetchRecords();
+    computed: {
+      isViewingOtherPatient() {
+        return this.$route.params.id && this.$route.params.id !== localStorage.getItem('patientId');
+      }
+    },
+    async created() {
+      await this.fetchRecords();
     },
     methods: {
       formatDate(dt) {
         if (!dt) return "-";
         return new Date(dt).toLocaleString();
       },
+      
       async fetchRecords() {
         this.loading = true;
         this.error = null;
         try {
-          // Get patientId from localStorage or user profile
-          const patientId = localStorage.getItem("patientId");
+          // Get patientId from route params or localStorage
+          const patientId = this.$route.params.id || localStorage.getItem("patientId");
           const token = localStorage.getItem("token");
+          
+          if (!patientId || !token) {
+            throw new Error('Missing patient ID or authentication token');
+          }
+          
           const res = await axios.get(`/api/medical/patient/${patientId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           this.records = res.data;
+          
+          // Set patient name for display
+          if (this.isViewingOtherPatient) {
+            this.patientName = localStorage.getItem('viewingPatientName') || `Patient ${patientId}`;
+          }
         } catch (err) {
           this.error = err.response?.data?.error || "Failed to load records";
         } finally {
           this.loading = false;
         }
       },
+      
       async addRecord() {
         this.adding = true;
         this.error = null;
         try {
-          const patientId = localStorage.getItem("patientId");
+          const patientId = this.$route.params.id || localStorage.getItem("patientId");
           const token = localStorage.getItem("token");
           await axios.post(
             "/api/medical",
@@ -113,6 +145,7 @@
           this.adding = false;
         }
       },
+      
       startEdit(record) {
         this.editId = record.record_id;
         this.editRecord = {
@@ -120,10 +153,12 @@
           notes: record.notes
         };
       },
+      
       cancelEdit() {
         this.editId = null;
         this.editRecord = { medical_condition: "", notes: "" };
       },
+      
       async saveEdit(recordId) {
         this.error = null;
         try {
@@ -140,6 +175,7 @@
           this.error = err.response?.data?.error || "Failed to update record";
         }
       },
+      
       async deleteRecord(recordId) {
         if (!confirm("Delete this medical record?")) return;
         try {
@@ -151,6 +187,11 @@
         } catch (err) {
           this.error = err.response?.data?.error || "Failed to delete record";
         }
+      },
+      
+      goBackToPatient() {
+        const patientId = this.$route.params.id;
+        this.$router.push(`/patient/${patientId}`);
       }
     }
   };
@@ -164,6 +205,44 @@
   border-radius: 8px;
   padding: 2rem;
   box-shadow: 0 2px 8px #0001;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #007bff;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background: #5a6268;
+}
+
+.viewing-indicator {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .record-list {
@@ -183,7 +262,13 @@
   margin-bottom: 0.5rem;
 }
 
-.record-item button {
+.record-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.record-actions button {
   margin-right: 0.5rem;
 }
 
@@ -204,41 +289,70 @@
   margin-bottom: 1rem;
 }
 
-label {
+.form-group label {
   display: block;
-  margin-bottom: 0.3rem;
-  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 
-input,
-textarea {
+.form-group input,
+.form-group textarea {
   width: 100%;
-  padding: 0.4rem;
-  border: 1px solid #bbb;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 0.9rem;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 button {
-  margin-top: 0.5rem;
-  background: #42b983;
-  color: #fff;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
   cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background: #0056b3;
 }
 
 button:disabled {
-  background: #b2dfdb;
+  background: #6c757d;
   cursor: not-allowed;
 }
 
 .error {
-  color: #d32f2f;
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
   margin-bottom: 1rem;
-  text-align: center;
+  border: 1px solid #f5c6cb;
 }
 
-  </style>
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .record-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .record-actions button {
+    margin-right: 0;
+  }
+}
+</style>

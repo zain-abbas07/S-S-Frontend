@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import ProfilePage from './pages/ProfilePage.vue';
+import EditProfilePage from './pages/EditProfilePage.vue';
 import LoginPage from './pages/LoginPage.vue';
 import SignupPage from './pages/SignupPage.vue';
 import RolePage from './pages/roleSelectionPage.vue';
@@ -11,6 +12,8 @@ import CaregiverSignupPage from './pages/CaregiverSignupPage.vue';
 import HomePage from './pages/HomePage.vue';
 import LinkPage from './pages/LinkPage.vue';
 import LinkCaregiver from './pages/LinkCaregiver.vue';
+import CaregiverDashboard from './pages/CaregiverDashboard.vue';
+import PatientView from './pages/PatientView.vue';
 
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
@@ -62,6 +65,12 @@ const router = new Router({
       meta: { requiresAuth: true }
     },
     {
+      path: '/edit-profile',
+      name: 'EditProfile',
+      component: EditProfilePage,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: CalendarPage,
@@ -103,8 +112,52 @@ const router = new Router({
       meta: { requiresAuth: true }
     },
     {
-      path: '*',
-      redirect: '/'
+      path: '/caregiver-dashboard',
+      name: 'CaregiverDashboard',
+      component: CaregiverDashboard,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/patient/:id',
+      name: 'PatientView',
+      component: PatientView,
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/patient/:id/profile',
+      name: 'PatientProfile',
+      component: ProfilePage,
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/patient/:id/medical-records',
+      name: 'PatientMedicalRecords',
+      component: MedicalRecordsPage,
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/patient/:id/alerts',
+      name: 'PatientAlerts',
+      component: AlertsPage,
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/patient/:id/calendar',
+      name: 'PatientCalendar',
+      component: CalendarPage,
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/patient/:id/map',
+      name: 'PatientMap',
+      component: MapPage,
+      meta: { requiresAuth: true },
+      props: true
     },
     {
       path: '/alerts',

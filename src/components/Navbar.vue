@@ -3,12 +3,25 @@
     <div class="navbar-content">
       <div class="navbar-brand">
         <router-link to="/profile">Smart Safety</router-link>
-
-        </div>
+      </div>
         
-      
       <ul class="navbar-links">
         <li v-if="isLoggedIn"><router-link to="/profile">Profile</router-link></li>
+        
+        <!-- Caregiver-specific navigation -->
+        <li v-if="isLoggedIn && (isCaregiver || userRole === 'caregiver')">
+          <router-link to="/caregiver-dashboard">Dashboard</router-link>
+        </li>
+        <li v-if="isLoggedIn && (isCaregiver || userRole === 'caregiver')">
+          <router-link to="/link-caregiver">Link Patient</router-link>
+        </li>
+        
+        <!-- Patient-specific navigation -->
+        <li v-if="isLoggedIn && (userRole === 'patient' || userRole === 'USER') && !isCaregiver">
+          <router-link to="/link-patient">Patient ID</router-link>
+        </li>
+        
+        <!-- Common navigation -->
         <li v-if="isLoggedIn"><router-link to="/calendar">Calendar</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/map">Map</router-link></li>
         <li v-if="isLoggedIn"><router-link to="/voice-chat">Voice Chat</router-link></li>
@@ -33,6 +46,7 @@
   
   <script>
   import { eventBus } from '@/eventBus';
+  import axios from 'axios';
 
   export default {
     name: "AppNavbar",
@@ -40,15 +54,17 @@
       return {
         userName: null,
         isLoggedIn: false,
+        isCaregiver: false,
+        userRole: null,
         hasActiveAlerts: false,
         previousAlertIds: []
       };
     },
-    created() {
+    async created() {
       this.setUser();
+      await this.checkUserRole();
       this.checkActiveAlerts();
       eventBus.on('alerts-updated', this.checkActiveAlerts);
-
     },
     mounted() {
       console.log('Navbar mounted!');
@@ -58,11 +74,11 @@
     beforeDestroy() {
       clearInterval(this.alertCheckInterval);
       eventBus.off('alerts-updated', this.checkActiveAlerts);
-
     },
     watch: {
       $route() {
         this.setUser();
+        this.checkUserRole();
       }
     },
     methods: {
@@ -72,10 +88,32 @@
         const profile = JSON.parse(localStorage.getItem("profile") || "null");
         if (profile && profile.first_name) {
           this.userName = profile.first_name;
+          this.userRole = profile.role || null;
         } else {
           this.userName = null;
+          this.userRole = null;
         }
       },
+      
+      async checkUserRole() {
+        try {
+          const userId = localStorage.getItem('userId');
+          const token = localStorage.getItem('token');
+          
+          if (!userId || !token) return;
+          
+          // Check if user is a caregiver
+          const response = await axios.get(`/api/caregivers?user_id=${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          this.isCaregiver = response.data.length > 0;
+        } catch (err) {
+          console.error('Error checking user role:', err);
+          this.isCaregiver = false;
+        }
+      },
+      
       logout() {
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
@@ -83,9 +121,11 @@
         localStorage.removeItem("profile");
         this.isLoggedIn = false;
         this.userName = null;
+        this.isCaregiver = false;
         this.$router.push("/login");
       },
-        async checkActiveAlerts() {
+      
+      async checkActiveAlerts() {
         const token = localStorage.getItem("token");
         let profile = JSON.parse(localStorage.getItem("profile") || "null");
         if (!profile) {
@@ -101,11 +141,12 @@
 
           let url = "";
 
-          if (profile.role === "caregiver") {
-            url = "/api/alerts/for-caregiver"; // caregiver route
+          if (profile.role === "caregiver" || this.isCaregiver) {
+            // For caregivers, get all alerts for their linked patients
+            url = "/api/alerts/for-caregiver";
           } else if (profile.role === "patient" || profile.role === "USER") {
             if (!patientId) return;
-            url = `/api/alerts?patientId=${patientId}`; // patient route
+            url = `/api/alerts?patient_id=${patientId}`;
           } else {
             return; // not a role that should fetch alerts
           }
@@ -117,12 +158,27 @@
             }
           });
 
+          if (!response.ok) {
+            console.error('[Navbar] Alerts API error:', response.status, response.statusText);
+            // If it's a 404 for caregiver, they might not have a caregiver record yet
+            if (response.status === 404 && (profile.role === "caregiver" || this.isCaregiver)) {
+              console.log('[Navbar] No caregiver record found, setting empty alerts');
+              this.hasActiveAlerts = false;
+              this.previousAlertIds = [];
+            }
+            return;
+          }
+
           const alerts = await response.json();
           console.log('[Navbar] Received alerts:', alerts);
-          this.hasActiveAlerts = alerts.some(alert => alert.handled === false);
+          
+          // Ensure alerts is an array
+          const alertsArray = Array.isArray(alerts) ? alerts : [];
+          this.hasActiveAlerts = alertsArray.some(alert => alert.handled === false);
           console.log('[Navbar] hasActiveAlerts:', this.hasActiveAlerts);
+          
           // New alert notification logic
-          const unhandledAlerts = alerts.filter(alert => alert.handled === false);
+          const unhandledAlerts = alertsArray.filter(alert => alert.handled === false);
           const newIds = unhandledAlerts.map(a => a.id);
           console.log('[Navbar] Previous unhandled IDs:', this.previousAlertIds, 'New unhandled IDs:', newIds);
           if (this.previousAlertIds.length > 0) {
@@ -157,66 +213,77 @@
   </script>
   
   <style scoped>
-  .navbar {
-    position: sticky;
-    top: 0;
-    width: 100%;
-    background: #42b983;
-    color: #fff;
-    z-index: 1000;
-    box-shadow: 0 2px 8px #0002;
-  }
-  .navbar-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0.5rem 1.5rem;
-  }
-  .navbar-brand {
-    font-size: 1.4rem;
-    font-weight: bold;
-  }
-  .navbar-links {
-    list-style: none;
-    display: flex;
-    gap: 1.2rem;
-    margin: 0;
-    padding: 0;
-  }
-  .navbar-links li {
-    display: inline-block;
-  }
-  .navbar-links a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-  .navbar-links a.router-link-exact-active {
-    text-decoration: underline;
-  }
-  .navbar-links a:hover {
-    color: #e0f2f1;
-  }
-  .navbar-user {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-  }
-  .navbar-user button {
-    background: #fff;
-    color: #42b983;
-    border: none;
-    border-radius: 4px;
-    padding: 0.3rem 0.8rem;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-  }
-  .navbar-user button:hover {
-    background: #e0f2f1;
-  }
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: #ffffff;
+  color: #005f99;
+  z-index: 1000;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: none;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 100%;
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #000;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  display: inline-block;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  font-weight: bold;
+  color: #007BFF;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.navbar-links a.router-link-exact-active,
+.navbar-links a:hover {
+  background-color: #e6f0ff;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.navbar-user button {
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbar-user button:hover {
+  background: #222;
+}
+
   </style>

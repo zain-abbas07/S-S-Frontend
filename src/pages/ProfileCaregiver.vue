@@ -26,13 +26,30 @@
       <h3>Linked Patients</h3>
       <ul>
         <li v-for="(patient, index) in patients" :key="index" class="patient-card">
-          <p><strong>First Name:</strong> {{ patient.first_name || '-' }}</p>
-          <p><strong>Last Name:</strong> {{ patient.last_name || '-' }}</p>
-          <p><strong>Email:</strong> {{ patient.email }}</p>
-          <p><strong>Phone:</strong> {{ patient.phone || '-' }}</p>
-          <p><strong>Address:</strong> {{ patient.address || '-' }}</p>
+            <p><strong>Email:</strong> {{ patient.email }}</p>
+            <p><strong>First Name:</strong> {{ patient.first_name || '-' }}</p>
+            <p><strong>Last Name:</strong> {{ patient.last_name || '-' }}</p>
+            <p><strong>Address:</strong> {{ patient.address || '-' }}</p>
+            <p><strong>Phone:</strong> {{ patient.phone || '-' }}</p>
+            <p><strong>Emergency Contact Name:</strong> {{ patient.emergency_name || '-' }}</p>
+            <p><strong>Emergency Contact Phone:</strong> {{ patient.emergency_phone || '-' }}</p>
+            <p><strong>Medical Info:</strong> {{ patient.medical_info || '-' }}</p>
+            <p><strong>Date of Birth / Age:</strong> {{ patient.date_of_birth || '-' }}</p>
+            <p><strong>Gender:</strong> {{ patient.gender || '-' }}</p>
+            <p><strong>Blood Type:</strong> {{ patient.blood_type || '-' }}</p>
+            <p><strong>Allergies:</strong> {{ patient.allergies || '-' }}</p>
+            <p><strong>Chronic Conditions:</strong> {{ patient.chronic_conditions || '-' }}</p>
+            <p><strong>Current Medications:</strong> {{ patient.current_medications || '-' }}</p>
+            <p><strong>Past Surgeries:</strong> {{ patient.past_surgeries || '-' }}</p>
+            <p><strong>Primary Care Physician:</strong> {{ patient.primary_physician || '-' }}</p>
+            <p><strong>Physician Contact:</strong> {{ patient.physician_contact || '-' }}</p>
+            <p><strong>Preferred Pharmacy:</strong> {{ patient.preferred_pharmacy || '-' }}</p>
+            <p><strong>Insurance Provider:</strong> {{ patient.insurance_provider || '-' }}</p>
+            <p><strong>Insurance Policy #:</strong> {{ patient.insurance_policy || '-' }}</p>
+            <p><strong>Vaccination Records:</strong> {{ patient.vaccination_records || '-' }}</p>
         </li>
-      </ul>
+    </ul>
+
     </div>
 
     <div v-else-if="caregiver">

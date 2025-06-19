@@ -11,6 +11,7 @@ import CaregiverSignupPage from './pages/CaregiverSignupPage.vue';
 import HomePage from './pages/HomePage.vue';
 import LinkPage from './pages/LinkPage.vue';
 import LinkCaregiver from './pages/LinkCaregiver.vue';
+import LinkAccount from './pages/LinkAccount.vue';
 
 import SubscriptionPage from './pages/SubscriptionPage.vue';
 import VoiceChat from '@/pages/VoiceChat.vue';
@@ -121,6 +122,12 @@ const router = new Router({
       path: '/assign-device',
       name: 'AssignDeviceToPatient',
       component: AssignDeviceToPatient
+    },
+    {
+      path: '/link-account',
+      name: 'LinkAccount',
+      component: LinkAccount,
+      meta: { requiresAuth: true }
     },
     {
       path: '*',

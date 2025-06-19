@@ -1,100 +1,87 @@
 <template>
-  <div class="link-patient-form">
-    <h2>Link to a Patient</h2>
-    <form @submit.prevent="linkPatient">
-      <label for="patientId">Enter Patient ID:</label>
-      <input
-        v-model="patientId"
-        type="number"
-        id="patientId"
-        required
-        placeholder="Paste the patient ID here"
-      />
-      <button type="submit" :disabled="loading">
-        <span v-if="loading">Linking...</span>
-        <span v-else>Link Patient</span>
-      </button>
-    </form>
-    <p v-if="error" class="error">{{ error }}</p>
+  <div class="link-page">
+    <h2 class="text-xl font-semibold mb-4">Link to Patient</h2>
+
+    <input
+      v-model="inputPatientId"
+      type="number"
+      placeholder="Enter Patient ID"
+      class="border p-2 rounded w-full mb-4"
+    />
+
+    <button
+      @click="linkPatient"
+      class="bg-blue-600 text-white px-4 py-2 rounded w-full"
+    >
+      Link Patient
+    </button>
+
+    <p v-if="successMessage" class="text-green-600 mt-4">{{ successMessage }}</p>
+    <p v-if="errorMessage" class="text-red-600 mt-4">{{ errorMessage }}</p>
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
 
-export default {
-  name: 'LinkCaregiver',
-  data() {
-    return {
-      patientId: '',
-      error: '',
-      loading: false,
-    };
-  },
-  methods: {
-    async linkPatient() {
-      this.loading = true;
-      this.error = '';
-      const caregiverId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
+const inputPatientId = ref('')
+const successMessage = ref('')
+const errorMessage = ref('')
 
-      if (!caregiverId || !token) {
-        this.error = 'Missing caregiver ID or token';
-        this.loading = false;
-        return;
-      }
+const linkPatient = async () => {
+  successMessage.value = ''
+  errorMessage.value = ''
 
-      try {
-        await axios.post(`/api/caregivers/${caregiverId}/patients`, {
-          patient_id: parseInt(this.patientId)
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+  const userId = localStorage.getItem('userId')
+  const token = localStorage.getItem('token')
 
-        alert(`Successfully linked to patient ID ${this.patientId}`);
-        this.patientId = '';
-      } catch (err) {
-        console.error(err);
-        this.error = err.response?.data?.error || 'Failed to link patient';
-      } finally {
-        this.loading = false;
-      }
-    }
+  if (!userId || !token) {
+    errorMessage.value = 'You must be logged in as a caregiver.'
+    return
   }
-};
+
+  try {
+    // Step 1: Get caregiver record by userId
+    const caregiverRes = await axios.get(`/api/caregivers?user_id=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    if (!caregiverRes.data.length) {
+      errorMessage.value = 'No caregiver record found for your account.'
+      return
+    }
+
+    const caregiverId = caregiverRes.data[0].id
+
+    // Step 2: Link caregiver to patient
+    const linkRes = await axios.post('/api/caregivers/link-patient', {
+      caregiverId,
+      patientId: Number(inputPatientId.value)
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    successMessage.value = linkRes.data.message || 'Linked successfully.'
+    inputPatientId.value = ''
+  } catch (err) {
+    errorMessage.value = err.response?.data?.message || 'Error linking patient.'
+    console.error(err)
+  }
+}
 </script>
 
 <style scoped>
-.link-patient-form {
-  max-width: 400px;
+.link-page {
+  max-width: 420px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #fff;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px #0001;
-  text-align: center;
-}
-input {
-  margin-top: 1rem;
-  padding: 0.5rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 5px;
-}
-button:disabled {
-  background-color: #b2dfdb;
-}
-.error {
-  color: red;
-  margin-top: 1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 </style>
